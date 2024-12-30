@@ -1,36 +1,189 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎓 PaperCraft - Ihr digitaler Assistent für akademisches Schreiben
 
-## Getting Started
+![PaperCraft Banner](public/banner.png)
 
-First, run the development server:
+PaperCraft ist eine moderne Webanwendung, die Studenten und Akademiker beim Verfassen wissenschaftlicher Arbeiten unterstützt. Mit KI-gestützten Funktionen, Echtzeit-Grammatikprüfung und integrierter Literaturverwaltung macht PaperCraft das akademische Schreiben effizienter und professioneller.
 
+## 🌟 Hauptfunktionen
+
+### 📝 Intelligenter Editor
+- **Rich-Text-Editor** mit TipTap
+  - Akademische Formatierungsoptionen
+  - Automatische Speicherung
+  - Tabellen, Bilder, und Formeln
+  - Dokumentenstrukturierung
+- **Inhaltsverzeichnis** mit automatischer Aktualisierung
+- **Split-View** für paralleles Arbeiten
+
+### 🤖 KI-Assistent
+- **Google Gemini Integration**
+  - Formulierungshilfen
+  - Strukturierungsvorschläge
+  - Akademischer Stil-Check
+- **Kontextsensitive Vorschläge**
+- **Markdown-Unterstützung**
+
+### ✍️ Grammatik & Rechtschreibung
+- **LanguageTool Integration**
+  - Echtzeit-Prüfung
+  - Kontextbasierte Vorschläge
+  - Akademischer Schreibstil
+- **Mehrsprachige Unterstützung**
+- **Interaktive Korrekturvorschläge**
+
+### 📚 Literaturverwaltung
+- **Cloud-basierte Bibliothek**
+  - Zentrale Quellenverwaltung
+  - Projektübergreifende Nutzung
+  - Automatische Synchronisation
+- **Zitierfunktionen**
+  - Multiple Zitierstile
+  - Automatisches Literaturverzeichnis
+  - Zitat-Import
+
+## 🛠️ Technischer Stack
+
+### Frontend
+- **Framework**: Next.js 14 mit App Router
+- **Sprache**: TypeScript
+- **Styling**: 
+  - Tailwind CSS
+  - shadcn/ui Komponenten
+  - Responsive Design
+- **Editor**: TipTap
+
+### Backend
+- **Firebase Suite**
+  - Authentication
+  - Firestore Database
+  - Cloud Storage
+- **APIs**
+  - Google Gemini
+  - LanguageTool
+
+## 📦 Installation
+
+1. **Repository klonen**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/papercraft.git
+cd papercraft
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Abhängigkeiten installieren**
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Umgebungsvariablen einrichten**
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Firebase konfigurieren**
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
 
-## Learn More
+5. **Gemini API Key einrichten**
+```env
+GEMINI_API_KEY=your_gemini_api_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+6. **Entwicklungsserver starten**
+```bash
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Projektstruktur
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+papercraft/
+├── app/
+│   ├── api/                 # API Routes
+│   ├── components/
+│   │   ├── dashboard/       # Dashboard Komponenten
+│   │   ├── editor/         # Editor Komponenten
+│   │   └── ui/             # UI Komponenten
+│   ├── context/            # React Context
+│   ├── dashboard/          # Dashboard Routen
+│   └── lib/               # Utilities
+├── public/                # Statische Assets
+└── styles/               # Globale Styles
+```
 
-## Deploy on Vercel
+## 🔑 Hauptkomponenten
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Editor
+- `TextEditor.tsx`: Haupteditor-Komponente
+- `EditorSidebar.tsx`: Seitenleiste mit Tools
+- `GrammarChecker.tsx`: Grammatikprüfung
+- `CitationManager.tsx`: Literaturverwaltung
+- `AIAssistant.tsx`: KI-Assistent
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Dashboard
+- `ProjectForm.tsx`: Projekt erstellen/bearbeiten
+- `UserNav.tsx`: Benutzernavigation
+- `ProjectList.tsx`: Projektübersicht
+
+## 🚀 Features im Detail
+
+### Projektmanagement
+- Projekte erstellen und organisieren
+- Automatische Speicherung
+- Versionierung
+- Exportfunktionen
+
+### Editorfunktionen
+- Formatierungswerkzeuge
+- Zitierfunktionen
+- Grammatikprüfung
+- KI-Unterstützung
+
+### Benutzerverwaltung
+- Authentifizierung
+- Profilmanagement
+- Projektfreigaben
+- Einstellungen
+
+## 📈 Roadmap
+
+- [ ] Kollaborative Bearbeitung
+- [ ] Erweiterte Export-Optionen
+- [ ] Plagiatsprüfung
+- [ ] Mobile App
+- [ ] API für Erweiterungen
+
+## 🤝 Contributing
+
+Beiträge sind willkommen! Bitte beachten Sie:
+
+1. Fork des Repositories
+2. Feature Branch erstellen
+3. Änderungen committen
+4. Pull Request erstellen
+
+## 📄 Lizenz
+
+Dieses Projekt ist unter der MIT-Lizenz lizenziert.
+
+## 👥 Team
+
+- [Ihr Name] - Hauptentwickler
+- [Team Member 2] - UI/UX
+- [Team Member 3] - Backend
+
+## 📞 Support
+
+- 📧 Email: support@papercraft.com
+- 💬 Discord: [PaperCraft Community](https://discord.gg/papercraft)
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/papercraft/issues)
+
+---
+
+Entwickelt mit ❤️ für die akademische Gemeinschaft
