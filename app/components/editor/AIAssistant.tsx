@@ -3,26 +3,25 @@
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bot, Loader2, Send, Eraser, Copy } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { toast } from "sonner"
 import ReactMarkdown from "react-markdown"
-
-interface Message {
-  role: "user" | "assistant"
-  content: string
-}
-
-const INITIAL_MESSAGES: Message[] = [{
-  role: "assistant",
-  content: "Hallo! Ich bin Ihr KI-Assistent für akademisches Schreiben. Ich kann Ihnen bei der Formulierung, Strukturierung und Recherche helfen. Wie kann ich Sie unterstützen?"
-}]
+import { useChat } from "@/app/hooks/useChat"
+import remarkGfm from "remark-gfm"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneDark } from "react-syntax-highlighter/dist/cjs/styles/prism/one-dark"
 
 export function AIAssistant() {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
-  const [input, setInput] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const { 
+    messages, 
+    input, 
+    isLoading, 
+    sendMessage, 
+    setInput, 
+    clearChat 
+  } = useChat()
+  
   const scrollAreaRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -31,49 +30,12 @@ export function AIAssistant() {
     }
   }, [messages])
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || isLoading) return
-
-    const userMessage = input.trim()
-    setInput("")
-    setMessages(prev => [...prev, { role: "user", content: userMessage }])
-    setIsLoading(true)
-
-    try {
-      const response = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: userMessage }),
-      })
-
-      if (!response.ok) throw new Error("Failed to get response")
-
-      const data = await response.json()
-      setMessages(prev => [...prev, { role: "assistant", content: data.response }])
-    } catch (error) {
-      toast.error("Fehler beim Senden der Nachricht")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const clearChat = () => {
-    setMessages(INITIAL_MESSAGES)
-    toast.success("Chat zurückgesetzt")
-  }
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success("In die Zwischenablage kopiert")
-  }
-
   return (
     <div className="h-full flex flex-col">
       <div className="flex-none flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Bot className="h-5 w-5" />
-          <h2 className="font-semibold">KI-Assistent</h2>
+          <h2 className="font-semibold">KI-Assistent (Gemini 2.0)</h2>
         </div>
         <Button
           variant="outline"
@@ -104,14 +66,37 @@ export function AIAssistant() {
                   } transition-colors`}
                 >
                   <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown>{message.content}</ReactMarkdown>
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({node, inline, className, children, ...props}) {
+                          const match = /language-(\w+)/.exec(className || '')
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              {...props}
+                              style={oneDark}
+                              language={match[1]}
+                              PreTag="div"
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code {...props} className={className}>
+                              {children}
+                            </code>
+                          )
+                        }
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
                   </div>
                   {message.role === "assistant" && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="absolute -right-10 top-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => copyToClipboard(message.content)}
+                      onClick={() => navigator.clipboard.writeText(message.content)}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>

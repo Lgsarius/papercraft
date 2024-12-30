@@ -13,9 +13,9 @@ interface EditorSidebarProps {
 
 export function EditorSidebar({ text, onCite }: EditorSidebarProps) {
   return (
-    <aside className="w-96 border-l bg-background flex flex-col">
-      <Tabs defaultValue="sources" className="flex-1">
-        <TabsList className="flex w-full justify-between border-b rounded-none px-2 h-14 bg-background">
+    <aside className="w-96 border-l bg-background flex flex-col overflow-hidden">
+      <Tabs defaultValue="sources" className="flex-1 flex flex-col">
+        <TabsList className="flex w-full justify-between border-b rounded-none px-2 h-14 bg-background flex-none">
           <TabsTrigger 
             value="sources" 
             className="flex-1 flex items-center gap-2 data-[state=active]:bg-muted rounded-none h-10"
@@ -38,14 +38,15 @@ export function EditorSidebar({ text, onCite }: EditorSidebarProps) {
             <span>KI</span>
           </TabsTrigger>
         </TabsList>
+
         <div className="flex-1 overflow-hidden">
-          <TabsContent value="sources" className="mt-0 h-full p-4">
+          <TabsContent value="sources" className="mt-0 h-full">
             <CitationManager onCite={onCite} />
           </TabsContent>
-          <TabsContent value="grammar" className="mt-0 h-full p-4">
+          <TabsContent value="grammar" className="mt-0 h-full">
             <GrammarChecker text={text} />
           </TabsContent>
-          <TabsContent value="ai" className="mt-0 h-full p-4">
+          <TabsContent value="ai" className="mt-0 h-full">
             <AIAssistant />
           </TabsContent>
         </div>
