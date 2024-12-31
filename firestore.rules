@@ -11,6 +11,19 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    // Global sources collection
+    match /sources/{sourceId} {
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      // Allow reading all sources for authenticated users
+      allow read: if isAuthenticated();
+      
+      // Allow update/delete only for source owner
+      allow update, delete: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+    }
+
     // Project rules
     match /projects/{projectId} {
       allow create: if isAuthenticated() && 
@@ -18,29 +31,46 @@ service cloud.firestore {
       
       allow read, update, delete: if isAuthenticated() && 
         isOwner(resource.data.userId);
+
+      // Project sources subcollection
+      match /sources/{sourceId} {
+        allow read, write: if isAuthenticated() && 
+          isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.userId);
+      }
     }
 
-    // Source rules
+    // User settings
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write, delete: if isAuthenticated() && isOwner(userId);
+      
+      // Allow cascading deletes when account is deleted
+      function isValidDelete() {
+        return request.auth.uid == userId;
+      }
+    }
+
+    // Projects with cascade delete
+    match /projects/{projectId} {
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      
+      allow read, update: if isAuthenticated() && 
+        isOwner(resource.data.userId);
+        
+      allow delete: if isAuthenticated() && 
+        (isOwner(resource.data.userId) || isValidDelete());
+    }
+
+    // Sources with cascade delete
     match /sources/{sourceId} {
       allow create: if isAuthenticated() && 
         request.resource.data.userId == request.auth.uid;
       
-      allow read, update, delete: if isAuthenticated() && 
-        isOwner(resource.data.userId);
-
-      // Validate source data
-      function isValidSource() {
-        let data = request.resource.data;
-        return data.title is string && 
-               data.title.size() > 0 && 
-               data.authors is list &&
-               data.year is string &&
-               data.source is string &&
-               data.type in ['book', 'article', 'website'] &&
-               data.userId == request.auth.uid &&
-               data.createdAt is timestamp &&
-               data.updatedAt is timestamp;
-      }
+      allow read: if isAuthenticated();
+      
+      allow update, delete: if isAuthenticated() && 
+        (isOwner(resource.data.userId) || isValidDelete());
     }
   }
 } 

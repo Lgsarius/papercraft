@@ -49,6 +49,7 @@ import { useDebounce } from 'use-debounce'
 import { TableOfContents } from './extensions/table-of-contents'
 import { StatusIndicator } from './StatusIndicator'
 import { EditorSidebar } from "./EditorSidebar"
+import { MenuBar } from './MenuBar'
 
 interface TextEditorProps {
   content: string
@@ -167,15 +168,18 @@ export function TextEditor({ content, onChange, projectId, sources }: TextEditor
   if (!editor) return null
 
   return (
-    <div className="flex h-full">
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex w-full">
+      <div className="flex-1 flex flex-col">
         <div className="flex-none border-b bg-background p-2">
           <MenuBar editor={editor} />
         </div>
         
-        <div className="flex-1 overflow-auto">
-          <div className="max-w-[210mm] mx-auto bg-white shadow-lg my-8 min-h-[297mm]">
-            <EditorContent editor={editor} />
+        <div className="flex-1 overflow-y-auto scrollbar-custom">
+          <div className="max-w-[210mm] mx-auto bg-white shadow-lg my-8">
+            <EditorContent 
+              editor={editor} 
+              className="min-h-[297mm]"
+            />
           </div>
         </div>
       </div>

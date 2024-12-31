@@ -67,7 +67,7 @@ export default function ProjectEditorPage() {
 
   if (loading) {
     return (
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <Spinner />
       </div>
     )
@@ -75,15 +75,13 @@ export default function ProjectEditorPage() {
 
   return (
     <GrammarProvider>
-      <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
-        <div className="flex-1 flex">
-          <TextEditor 
-            content={content} 
-            onChange={handleContentChange} 
-            projectId={params.id as string}
-            sources={project?.sources || []}
-          />
-        </div>
+      <div className="h-full flex">
+        <TextEditor 
+          content={content} 
+          onChange={handleContentChange} 
+          projectId={params.id as string}
+          sources={project?.sources || []}
+        />
       </div>
     </GrammarProvider>
   )

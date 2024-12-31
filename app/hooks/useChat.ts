@@ -8,7 +8,7 @@ interface Message {
 
 const INITIAL_MESSAGES: Message[] = [{
   role: "assistant",
-  content: "Hallo! Ich bin Ihr KI-Assistent für akademisches Schreiben, powered by Gemini 2.0. Ich kann Ihnen bei der Formulierung, Strukturierung und Recherche helfen. Wie kann ich Sie unterstützen?"
+  content: "Hallo! Ich bin Ihr KI-Assistent für akademisches Schreiben. Ich kann Ihnen bei der Formulierung, Strukturierung und Recherche helfen. Wie kann ich Sie unterstützen?"
 }]
 
 export function useChat() {

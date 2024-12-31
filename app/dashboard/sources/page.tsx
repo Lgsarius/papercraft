@@ -1,68 +1,33 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useAuthState } from "react-firebase-hooks/auth"
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore"
-import { auth, db } from "@/app/firebase/config"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { SourceManager } from "@/app/components/editor/SourceManager"
+import { useSourceContext } from "@/app/context/SourceContext"
 import { Spinner } from "@/components/ui/spinner"
-import { SourceManager } from "@/app/components/sources/SourceManager"
-
-export interface Source {
-  id: string
-  type: "book" | "article" | "website"
-  title: string
-  authors: string[]
-  year: string
-  source: string
-  url?: string
-  pages?: string
-  userId: string
-  createdAt: Date
-  updatedAt: Date
-  projects: string[] // IDs of projects using this source
-}
 
 export default function SourcesPage() {
-  const [user] = useAuthState(auth)
-  const [sources, setSources] = useState<Source[]>([])
-  const [loading, setLoading] = useState(true)
+  const { loading } = useSourceContext()
   const [showAddSheet, setShowAddSheet] = useState(false)
 
-  useEffect(() => {
-    if (!user) return
-
-    const q = query(
-      collection(db, "sources"),
-      where("userId", "==", user.uid)
-    )
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const sourcesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt.toDate(),
-        updatedAt: doc.data().updatedAt.toDate(),
-      })) as Source[]
-
-      sourcesData.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-
-      setSources(sourcesData)
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
-  }, [user])
-
   if (loading) {
-    return <Spinner />
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Spinner />
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Quellenverwaltung</h1>
+    <div className="p-8 space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Quellen</h1>
+          <p className="text-muted-foreground">
+            Verwalten Sie Ihre Quellen und Referenzen
+          </p>
+        </div>
         <Button onClick={() => setShowAddSheet(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Neue Quelle
@@ -70,7 +35,6 @@ export default function SourcesPage() {
       </div>
 
       <SourceManager 
-        sources={sources} 
         showAddSheet={showAddSheet}
         setShowAddSheet={setShowAddSheet}
       />

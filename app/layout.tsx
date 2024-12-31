@@ -3,6 +3,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Toaster } from "sonner"
 import { AuthProvider } from "./context/AuthContext"
+import { SourceProvider } from "./context/SourceContext"
 
 
 
@@ -28,7 +29,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <SourceProvider>
+              {children}
+            </SourceProvider>
             <Toaster />
           </ThemeProvider>
         </AuthProvider>

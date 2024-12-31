@@ -1,16 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { Source } from "@/app/dashboard/sources/page"
-import { Button } from "@/components/ui/button"
+import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore"
+import { db, auth } from "@/app/firebase/config"
+import { useAuthState } from "react-firebase-hooks/auth"
+import { Source } from "@/app/types"
+import { useSourceContext } from "@/app/context/SourceContext"
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -18,213 +23,230 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Book, Edit2, MoreVertical, Search, Trash2 } from "lucide-react"
-import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore"
-import { db, auth } from "@/app/firebase/config"
-import { SourceForm } from "./SourceForm"
-
-interface SourceFormData {
-  type: Source['type']
-  title: string
-  authors: string
-  year: string
-  source: string
-  url?: string
-  pages?: string
-}
+import { SourceList } from "./SourceList"
+import { toast } from "sonner"
 
 interface SourceManagerProps {
-  sources: Source[]
   showAddSheet: boolean
   setShowAddSheet: (show: boolean) => void
 }
 
-export function SourceManager({ sources, showAddSheet, setShowAddSheet }: SourceManagerProps) {
-  const [search, setSearch] = useState("")
-  const [showEditSheet, setShowEditSheet] = useState(false)
+export function SourceManager({ showAddSheet, setShowAddSheet }: SourceManagerProps) {
+  const [user] = useAuthState(auth)
+  const { sources, addSource, updateSource, deleteSource } = useSourceContext()
+  const [loading, setLoading] = useState(false)
   const [editingSource, setEditingSource] = useState<Source | null>(null)
-  const [formData, setFormData] = useState<SourceFormData>({
-    type: "book",
+  const [formData, setFormData] = useState({
     title: "",
     authors: "",
     year: "",
-    source: "",
     url: "",
+    type: "article" as const,
+    publisher: "",
+    journal: "",
     pages: "",
   })
 
-  const handleSubmit = async (isEditing: boolean) => {
-    const user = auth.currentUser
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!user) return
 
-    const sourceData = {
-      type: formData.type,
-      title: formData.title.trim(),
-      authors: formData.authors.split(",").map(a => a.trim()).filter(Boolean),
-      year: formData.year.trim(),
-      source: formData.source.trim(),
-      url: formData.url?.trim(),
-      pages: formData.pages?.trim(),
-      userId: user.uid,
-      projects: [],
-    }
-
+    setLoading(true)
     try {
-      if (isEditing && editingSource) {
-        await updateDoc(doc(db, "sources", editingSource.id), {
-          ...sourceData,
-          updatedAt: serverTimestamp(),
-        })
-      } else {
-        await addDoc(collection(db, "sources"), {
-          ...sourceData,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        })
+      const now = new Date()
+      const sourceData = {
+        ...formData,
+        authors: formData.authors.split(",").map(a => a.trim()),
+        userId: user.uid,
+        createdAt: now,
+        updatedAt: now,
       }
 
-      resetForm()
+      if (editingSource) {
+        await updateDoc(doc(db, "sources", editingSource.id), {
+          ...sourceData,
+          updatedAt: now,
+        })
+        updateSource({ ...editingSource, ...sourceData })
+        toast.success("Quelle aktualisiert")
+      } else {
+        const docRef = await addDoc(collection(db, "sources"), sourceData)
+        addSource({ id: docRef.id, ...sourceData } as Source)
+        toast.success("Quelle hinzugefügt")
+      }
+
       setShowAddSheet(false)
-      setShowEditSheet(false)
+      resetForm()
     } catch (error) {
       console.error("Error saving source:", error)
+      toast.error("Fehler beim Speichern")
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleEdit = (source: Source) => {
+    setEditingSource(source)
+    setFormData({
+      title: source.title,
+      authors: source.authors.join(", "),
+      year: source.year,
+      url: source.url || "",
+      type: source.type,
+      publisher: source.publisher || "",
+      journal: source.journal || "",
+      pages: source.pages || "",
+    })
+    setShowAddSheet(true)
+  }
+
+  const handleDelete = async (sourceId: string) => {
+    if (!confirm("Möchten Sie diese Quelle wirklich löschen?")) return
+
     try {
-      await deleteDoc(doc(db, "sources", id))
+      await deleteDoc(doc(db, "sources", sourceId))
+      deleteSource(sourceId)
+      toast.success("Quelle gelöscht")
     } catch (error) {
       console.error("Error deleting source:", error)
+      toast.error("Fehler beim Löschen")
     }
   }
 
   const resetForm = () => {
     setFormData({
-      type: "book",
       title: "",
       authors: "",
       year: "",
-      source: "",
       url: "",
+      type: "article",
+      publisher: "",
+      journal: "",
       pages: "",
     })
     setEditingSource(null)
   }
 
-  const filteredSources = sources.filter(source =>
-    source.title.toLowerCase().includes(search.toLowerCase()) ||
-    source.authors.join(", ").toLowerCase().includes(search.toLowerCase())
-  )
-
   return (
-    <div className="space-y-4">
-      <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Quellen durchsuchen..."
-            className="pl-8"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      </div>
+    <>
+      <Sheet open={showAddSheet} onOpenChange={setShowAddSheet}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{editingSource ? "Quelle bearbeiten" : "Neue Quelle hinzufügen"}</SheetTitle>
+            <SheetDescription>
+              {editingSource ? "Bearbeiten Sie die Details der Quelle." : "Fügen Sie eine neue Quelle zu Ihrer Bibliothek hinzu."}
+            </SheetDescription>
+          </SheetHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Titel</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="authors">Autoren (kommagetrennt)</Label>
+              <Input
+                id="authors"
+                value={formData.authors}
+                onChange={(e) => setFormData(prev => ({ ...prev, authors: e.target.value }))}
+                required
+                placeholder="Max Mustermann, Erika Musterfrau"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="year">Jahr</Label>
+                <Input
+                  id="year"
+                  value={formData.year}
+                  onChange={(e) => setFormData(prev => ({ ...prev, year: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Typ</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, type: value as Source["type"] }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="article">Artikel</SelectItem>
+                    <SelectItem value="book">Buch</SelectItem>
+                    <SelectItem value="website">Webseite</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {formData.type === "book" && (
+              <div className="space-y-2">
+                <Label htmlFor="publisher">Verlag</Label>
+                <Input
+                  id="publisher"
+                  value={formData.publisher}
+                  onChange={(e) => setFormData(prev => ({ ...prev, publisher: e.target.value }))}
+                />
+              </div>
+            )}
+            {formData.type === "article" && (
+              <div className="space-y-2">
+                <Label htmlFor="journal">Journal</Label>
+                <Input
+                  id="journal"
+                  value={formData.journal}
+                  onChange={(e) => setFormData(prev => ({ ...prev, journal: e.target.value }))}
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="pages">Seiten</Label>
+              <Input
+                id="pages"
+                value={formData.pages}
+                onChange={(e) => setFormData(prev => ({ ...prev, pages: e.target.value }))}
+                placeholder="z.B. 123-145"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="url">URL (optional)</Label>
+              <Input
+                id="url"
+                type="url"
+                value={formData.url}
+                onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
+                placeholder="https://..."
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowAddSheet(false)
+                  resetForm()
+                }}
+              >
+                Abbrechen
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {editingSource ? "Speichern" : "Hinzufügen"}
+              </Button>
+            </div>
+          </form>
+        </SheetContent>
+      </Sheet>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Typ</TableHead>
-              <TableHead>Titel</TableHead>
-              <TableHead>Autoren</TableHead>
-              <TableHead>Jahr</TableHead>
-              <TableHead>Quelle</TableHead>
-              <TableHead className="w-[100px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredSources.map((source) => (
-              <TableRow key={source.id}>
-                <TableCell>
-                  <Book className="h-4 w-4" />
-                </TableCell>
-                <TableCell>{source.title}</TableCell>
-                <TableCell>{source.authors.join(", ")}</TableCell>
-                <TableCell>{source.year}</TableCell>
-                <TableCell>{source.source}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
-                        setEditingSource(source)
-                        setFormData({
-                          type: source.type,
-                          title: source.title,
-                          authors: source.authors.join(", "),
-                          year: source.year,
-                          source: source.source,
-                          url: source.url,
-                          pages: source.pages,
-                        })
-                        setShowEditSheet(true)
-                      }}>
-                        <Edit2 className="h-4 w-4 mr-2" />
-                        Bearbeiten
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDelete(source.id)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Löschen
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      <SourceForm 
-        isOpen={showAddSheet}
-        onOpenChange={setShowAddSheet}
-        formData={formData}
-        setFormData={setFormData}
-        onSubmit={() => handleSubmit(false)}
-        title="Neue Quelle"
+      <SourceList 
+        sources={sources}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
-
-      <SourceForm 
-        isOpen={showEditSheet}
-        onOpenChange={setShowEditSheet}
-        formData={formData}
-        setFormData={setFormData}
-        onSubmit={() => handleSubmit(true)}
-        title="Quelle bearbeiten"
-      />
-    </div>
+    </>
   )
 } 
