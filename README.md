@@ -1,6 +1,5 @@
 # 🎓 PaperCraft - Ihr digitaler Assistent für akademisches Schreiben
 
-![PaperCraft Banner](public/banner.png)
 
 PaperCraft ist eine moderne Webanwendung, die Studenten und Akademiker beim Verfassen wissenschaftlicher Arbeiten unterstützt. Mit KI-gestützten Funktionen, Echtzeit-Grammatikprüfung und integrierter Literaturverwaltung macht PaperCraft das akademische Schreiben effizienter und professioneller.
 
@@ -171,19 +170,3 @@ Beiträge sind willkommen! Bitte beachten Sie:
 ## 📄 Lizenz
 
 Dieses Projekt ist unter der MIT-Lizenz lizenziert.
-
-## 👥 Team
-
-- [Ihr Name] - Hauptentwickler
-- [Team Member 2] - UI/UX
-- [Team Member 3] - Backend
-
-## 📞 Support
-
-- 📧 Email: support@papercraft.com
-- 💬 Discord: [PaperCraft Community](https://discord.gg/papercraft)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/papercraft/issues)
-
----
-
-Entwickelt mit ❤️ für die akademische Gemeinschaft
